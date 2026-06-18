@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>間接引語闖關 — 教師端</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #edf2f7; color: #1a202c; min-height: 100vh; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+h1 { font-size: 1.4rem; color: #2d3748; }
+h2 { font-size: 1.15rem; color: #2d3748; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+h3 { font-size: 1rem; color: #4a5568; margin-bottom: 8px; }
+
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.card-sm { padding: 16px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.btn-primary { background: #48bb78; color: #fff; }
+.btn-primary:hover { background: #38a169; }
+.btn-blue { background: #4299e1; color: #fff; }
+.btn-blue:hover { background: #3182ce; }
+.btn-warning { background: #ed8936; color: #fff; }
+.btn-warning:hover { background: #dd6b20; }
+.btn-danger { background: #fc8181; color: #fff; }
+.btn-danger:hover { background: #f56565; }
+.btn-outline { background: transparent; border: 2px solid #4299e1; color: #4299e1; }
+.btn-outline:hover { background: #ebf8ff; }
+.btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.input, .select { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; transition: border-color 0.2s; }
+.input:focus, .select:focus { outline: none; border-color: #4299e1; }
+.textarea { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; min-height: 80px; resize: vertical; }
+.textarea:focus { outline: none; border-color: #4299e1; }
+
+label { display: block; font-size: 0.85rem; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+.form-group { margin-bottom: 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width:600px) { .form-row { grid-template-columns: 1fr; } }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+th { background: #f7fafc; color: #4a5568; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+tr:hover td { background: #f7fafc; }
+td.actions { white-space: nowrap; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+.badge-l1 { background: #c6f6d5; color: #22543d; }
+.badge-l2 { background: #bee3f8; color: #2a4365; }
+.badge-l3 { background: #fefcbf; color: #744210; }
+.badge-type { background: #e9d8fd; color: #553c9a; }
+
+.nav-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: #fff; border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); flex-wrap: wrap; }
+.nav-tab { padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #718096; transition: all 0.2s; border: none; background: none; }
+.nav-tab:hover { background: #f7fafc; }
+.nav-tab.active { background: #48bb78; color: #fff; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width:700px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-box { position: relative; height: 260px; }
+
+.stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.stat-card .num { font-size: 1.8rem; font-weight: 800; color: #2d3748; }
+.stat-card .label { font-size: 0.8rem; color: #718096; margin-top: 4px; }
+
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.top-bar h1 { font-size: 1.3rem; display: flex; align-items: center; gap: 8px; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.active { display: flex; }
+.modal { background: #fff; border-radius: 16px; padding: 28px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal h2 { margin-bottom: 16px; }
+
+/* PIN Overlay */
+.pin-overlay { display: flex; position: fixed; top:0; left:0; right:0; bottom:0; background: linear-gradient(135deg, #2d3748, #1a202c); z-index:200; align-items:center; justify-content:center; }
+.pin-overlay.hidden { display: none; }
+.pin-box { background: #fff; border-radius: 20px; padding: 40px; max-width: 360px; width: 90%; text-align: center; }
+.pin-box h2 { margin-bottom: 8px; color: #2d3748; }
+.pin-box .sub { color: #718096; font-size: 0.9rem; margin-bottom: 20px; }
+.pin-input-group { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
+.pin-digit { width: 48px; height: 56px; text-align: center; font-size: 1.5rem; font-weight: 700; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; }
+.pin-digit:focus { border-color: #48bb78; }
+.pin-error { color: #fc8181; font-size: 0.85rem; min-height: 1.3em; }
+
+.empty-state { text-align: center; padding: 40px 20px; color: #a0aec0; }
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+.student-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+.student-item:last-child { border-bottom: none; }
+.student-item .name { font-weight: 600; }
+.student-item .info { font-size: 0.8rem; color: #718096; }
+
+@media print {
+  .btn, .btn-group, .nav-tabs, .top-bar .btn { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- PIN Overlay -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <h2>🔐 教師端</h2>
+    <p class="sub">請輸入 PIN 碼</p>
+    <div class="pin-input-group">
+      <input class="pin-digit" maxlength="1" autofocus oninput="pinNext(this,0)">
+      <input class="pin-digit" maxlength="1" oninput="pinNext(this,1)">
+      <input class="pin-digit" maxlength="1" oninput="pinNext(this,2)">
+      <input class="pin-digit" maxlength="1" oninput="pinNext(this,3)">
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <button class="btn btn-primary btn-block" onclick="checkPin()">解鎖</button>
+  </div>
+</div>
+
+<div class="container" id="main-app">
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <h1>📚 間接引語闖關 · 教師端</h1>
+    <div class="btn-group">
+      <button class="btn btn-sm btn-outline" onclick="importQuestions()">📥 匯入題庫</button>
+      <button class="btn btn-sm btn-blue" onclick="exportQuestions()">📤 匯出題庫</button>
+      <button class="btn btn-sm btn-outline" onclick="location.reload()" style="border-color:#fc8181;color:#fc8181">🔒 鎖定</button>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="questions" onclick="switchTab(this)">📝 題庫管理</button>
+    <button class="nav-tab" data-tab="dashboard" onclick="switchTab(this)">📊 數據看板</button>
+    <button class="nav-tab" data-tab="students" onclick="switchTab(this)">👥 學生管理</button>
+  </div>
+
+  <!-- Tab: Question Bank -->
+  <div class="tab-content active" id="tab-questions">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <h2>📝 題庫列表</h2>
+        <button class="btn btn-sm btn-primary" onclick="openQuestionModal()">＋ 新增題目</button>
+      </div>
+      <div id="question-table-container">
+        <div class="empty-state"><div class="icon">📭</div><p>暫無題目，請新增或匯入</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Dashboard -->
+  <div class="tab-content" id="tab-dashboard">
+    <!-- Stats -->
+    <div class="stat-cards" id="stat-cards">
+      <div class="stat-card"><div class="num" id="stat-students">0</div><div class="label">學生人數</div></div>
+      <div class="stat-card"><div class="num" id="stat-avg">0%</div><div class="label">全班平均</div></div>
+      <div class="stat-card"><div class="num" id="stat-l1pass">0%</div><div class="label">Level 1 通過率</div></div>
+      <div class="stat-card"><div class="num" id="stat-l2pass">0%</div><div class="label">Level 2 通過率</div></div>
+      <div class="stat-card"><div class="num" id="stat-l3pass">0%</div><div class="label">Level 3 通過率</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-grid">
+      <div class="card"><h3>📊 各題答對率</h3><div class="chart-box"><canvas id="chart-accuracy"></canvas></div></div>
+      <div class="card"><h3>🥧 錯因分類</h3><div class="chart-box"><canvas id="chart-errors"></canvas></div></div>
+      <div class="card"><h3>📈 個人成績趨勢</h3><div class="chart-box"><canvas id="chart-trend"></canvas></div></div>
+      <div class="card"><h3>🏆 高頻錯題排行</h3><div class="chart-box"><canvas id="chart-top-wrong"></canvas></div></div>
+    </div>
+
+    <!-- Student Data Import -->
+    <div class="card">
+      <h2>📥 匯入學生數據</h2>
+      <p style="font-size:0.85rem;color:#718096;margin-bottom:12px">上傳學生從 student.html 匯出的 JSON 作答記錄檔，即可更新數據看板。</p>
+      <input type="file" accept=".json" id="data-upload" onchange="importStudentData(event)" style="font-size:0.9rem">
+      <div id="import-status" style="font-size:0.85rem;color:#48bb78;margin-top:8px"></div>
+      <div class="btn-group">
+        <button class="btn btn-sm btn-blue" onclick="exportCSV()">📤 匯出 CSV 報表</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Student Management -->
+  <div class="tab-content" id="tab-students">
+    <div class="card">
+      <h2>👥 學生列表</h2>
+      <div id="student-list-container"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Question Modal -->
+<div class="modal-overlay" id="question-modal">
+  <div class="modal">
+    <h2 id="modal-title">新增題目</h2>
+    <input type="hidden" id="edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>題型</label>
+        <select class="select" id="q-type">
+          <option value="fill-in">填充題 (fill-in)</option>
+          <option value="multiple-choice">選擇題 (multiple-choice)</option>
+          <option value="rewrite">句子改寫 (rewrite)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>難度 Level</label>
+        <select class="select" id="q-level">
+          <option value="1">Level 1：人稱代名詞</option>
+          <option value="2">Level 2：時態與時間</option>
+          <option value="3">Level 3：混合挑戰</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>直接引語句子</label>
+      <input class="input" id="q-direct" placeholder='例如：Tom said, "I am happy."'>
+    </div>
+    <div class="form-group">
+      <label>正確答案（間接引語）</label>
+      <input class="input" id="q-answer" placeholder="例如：Tom said he was happy">
+    </div>
+    <div class="form-group" id="options-group">
+      <label>選擇題選項（每行一個，共 4 個）</label>
+      <textarea class="textarea" id="q-options" placeholder="選項A&#10;選項B&#10;選項C&#10;選項D" rows="4"></textarea>
+    </div>
+    <div class="form-group">
+      <label>正確選項索引（0=A, 1=B, 2=C, 3=D，僅選擇題需填）</label>
+      <input class="input" id="q-correct-option" placeholder="例如：1">
+    </div>
+    <div class="form-group">
+      <label>文法規則解釋</label>
+      <textarea class="textarea" id="q-rule" placeholder="例如：人稱 I → he，動詞 am → was"></textarea>
+    </div>
+    <div class="form-group">
+      <label>常見錯因分析</label>
+      <textarea class="textarea" id="q-error" placeholder="例如：忘記將 I 改為 he"></textarea>
+    </div>
+    <div class="form-group">
+      <label>提示引導</label>
+      <textarea class="textarea" id="q-hint" placeholder="例如：想想 Tom 是男性，應用哪個代名詞？"></textarea>
+    </div>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeQuestionModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== STATE ======
+let questions = [];
+let studentsData = []; // imported student records
+
+const DEFAULT_PIN = '1234';
+const STORAGE_KEY = 'indirect_speech_teacher';
+
+// ====== PIN ======
+const pinInputs = document.querySelectorAll('.pin-digit');
+function pinNext(el, idx) {
+  if (el.value && idx < 3) pinInputs[idx+1].focus();
+  document.getElementById('pin-error').textContent = '';
+}
+document.querySelectorAll('.pin-digit').forEach((el, i) => {
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !el.value && i > 0) pinInputs[i-1].focus();
+    if (e.key === 'Enter') checkPin();
+  });
+});
+
+function checkPin() {
+  const pin = Array.from(pinInputs).map(i => i.value).join('');
+  if (pin === DEFAULT_PIN) {
+    document.getElementById('pin-overlay').classList.add('hidden');
+    loadState();
+    renderQuestions();
+  } else {
+    document.getElementById('pin-error').textContent = '❌ PIN 碼錯誤，請重試';
+    pinInputs.forEach(i => { i.value = ''; });
+    pinInputs[0].focus();
+  }
+}
+
+// ====== STATE MANAGEMENT ======
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.questions) questions = data.questions;
+      if (data.students) studentsData = data.students;
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ questions, students: studentsData }));
+  } catch(e) {}
+}
+
+// ====== TAB SWITCHING ======
+function switchTab(el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabId = el.dataset.tab;
+  document.getElementById('tab-' + tabId).classList.add('active');
+  if (tabId === 'questions') renderQuestions();
+  if (tabId === 'dashboard') renderDashboard();
+  if (tabId === 'students') renderStudents();
+}
+
+// ====== QUESTION BANK ======
+function renderQuestions() {
+  const container = document.getElementById('question-table-container');
+  if (questions.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>暫無題目，按「新增題目」開始建立題庫，或從 JSON 匯入。</p></div>';
+    return;
+  }
+  const typeLabels = { 'fill-in':'填充', 'multiple-choice':'選擇', 'rewrite':'改寫' };
+  let html = `<table><thead><tr><th>ID</th><th>Level</th><th>題型</th><th>直接引語</th><th>答案</th><th>操作</th></tr></thead><tbody>`;
+  questions.forEach(q => {
+    html += `<tr>
+      <td>${q.id}</td>
+      <td><span class="badge badge-l${q.level}">L${q.level}</span></td>
+      <td><span class="badge badge-type">${typeLabels[q.type]||q.type}</span></td>
+      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.direct}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.answer}</td>
+      <td class="actions">
+        <button class="btn btn-sm btn-outline" onclick="editQuestion(${q.id})">編輯</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteQuestion(${q.id})">刪除</button>
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function openQuestionModal(data) {
+  const modal = document.getElementById('question-modal');
+  modal.classList.add('active');
+  document.getElementById('modal-title').textContent = data ? '編輯題目' : '新增題目';
+  document.getElementById('edit-id').value = data ? data.id : '';
+  document.getElementById('q-type').value = data ? data.type : 'fill-in';
+  document.getElementById('q-level').value = data ? data.level : '1';
+  document.getElementById('q-direct').value = data ? data.direct : '';
+  document.getElementById('q-answer').value = data ? data.answer : '';
+  document.getElementById('q-options').value = data && data.options ? data.options.join('\n') : '';
+  document.getElementById('q-correct-option').value = data && data.correctOption !== undefined ? data.correctOption : '';
+  document.getElementById('q-rule').value = data ? data.rule : '';
+  document.getElementById('q-error').value = data ? data.errorAnalysis : '';
+  document.getElementById('q-hint').value = data ? data.hint : '';
+  toggleOptionsGroup();
+}
+
+function closeQuestionModal() {
+  document.getElementById('question-modal').classList.remove('active');
+}
+
+document.getElementById('q-type').addEventListener('change', toggleOptionsGroup);
+
+function toggleOptionsGroup() {
+  const type = document.getElementById('q-type').value;
+  document.getElementById('options-group').style.display = type === 'multiple-choice' ? 'block' : 'none';
+}
+
+function saveQuestion() {
+  const id = document.getElementById('edit-id').value;
+  const type = document.getElementById('q-type').value;
+  const level = parseInt(document.getElementById('q-level').value);
+  const direct = document.getElementById('q-direct').value.trim();
+  const answer = document.getElementById('q-answer').value.trim();
+  const rule = document.getElementById('q-rule').value.trim();
+  const errorAnalysis = document.getElementById('q-error').value.trim();
+  const hint = document.getElementById('q-hint').value.trim();
+
+  if (!direct || !answer) { alert('請填寫直接引語和正確答案'); return; }
+
+  let options = undefined;
+  let correctOption = undefined;
+  if (type === 'multiple-choice') {
+    options = document.getElementById('q-options').value.split('\n').filter(s => s.trim()).map(s => s.trim());
+    if (options.length !== 4) { alert('選擇題需剛好 4 個選項（每行一個）'); return; }
+    correctOption = parseInt(document.getElementById('q-correct-option').value);
+    if (isNaN(correctOption) || correctOption < 0 || correctOption > 3) { alert('請輸入正確選項索引（0-3）'); return; }
+  }
+
+  const data = { type, level, direct, answer, rule, errorAnalysis, hint };
+  if (options) { data.options = options; data.correctOption = correctOption; }
+
+  if (id) {
+    // Edit existing
+    const idx = questions.findIndex(q => q.id === parseInt(id));
+    if (idx >= 0) { questions[idx] = { ...questions[idx], ...data }; }
+  } else {
+    // New
+    const newId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
+    data.id = newId;
+    questions.push(data);
+  }
+  saveState();
+  renderQuestions();
+  closeQuestionModal();
+}
+
+function editQuestion(id) {
+  const q = questions.find(q => q.id === id);
+  if (q) openQuestionModal(q);
+}
+
+function deleteQuestion(id) {
+  if (!confirm('確定刪除此題目？')) return;
+  questions = questions.filter(q => q.id !== id);
+  saveState();
+  renderQuestions();
+}
+
+// ====== IMPORT/EXPORT QUESTIONS ======
+function exportQuestions() {
+  const blob = new Blob([JSON.stringify(questions, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '題庫.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importQuestions() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (Array.isArray(data)) {
+          questions = data;
+          saveState();
+          renderQuestions();
+          alert('題庫匯入成功！共 ' + questions.length + ' 題');
+        } else {
+          alert('JSON 格式錯誤：須為陣列');
+        }
+      } catch(err) {
+        alert('JSON 解析錯誤：' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ====== DASHBOARD ======
+function renderDashboard() {
+  renderStatCards();
+  renderAccuracyChart();
+  renderErrorPieChart();
+  renderTrendChart();
+  renderTopWrongChart();
+}
+
+function renderStatCards() {
+  document.getElementById('stat-students').textContent = studentsData.length;
+
+  let totalCorrect = 0, totalQ = 0;
+  let l1p = 0, l1t = 0, l2p = 0, l2t = 0, l3p = 0, l3t = 0;
+
+  studentsData.forEach(s => {
+    s.history.forEach(h => {
+      totalCorrect += h.correct || 0;
+      totalQ += h.total || 0;
+      if (h.level === 1) { l1p += h.correct || 0; l1t += h.total || 0; }
+      if (h.level === 2) { l2p += h.correct || 0; l2t += h.total || 0; }
+      if (h.level === 3) { l3p += h.correct || 0; l3t += h.total || 0; }
+    });
+  });
+
+  document.getElementById('stat-avg').textContent = totalQ > 0 ? Math.round(totalCorrect/totalQ*100) + '%' : '0%';
+  document.getElementById('stat-l1pass').textContent = l1t > 0 ? Math.round(l1p/l1t*100) + '%' : '0%';
+  document.getElementById('stat-l2pass').textContent = l2t > 0 ? Math.round(l2p/l2t*100) + '%' : '0%';
+  document.getElementById('stat-l3pass').textContent = l3t > 0 ? Math.round(l3p/l3t*100) + '%' : '0%';
+}
+
+function getQuestionAccuracy() {
+  // returns { qId, direct, correctCount, totalCount, pct }
+  const accMap = {};
+  studentsData.forEach(s => {
+    (s.records || []).forEach(r => {
+      if (!accMap[r.qId]) accMap[r.qId] = { correct:0, total:0 };
+      accMap[r.qId].total++;
+      if (r.correct) accMap[r.qId].correct++;
+    });
+  });
+
+  return Object.entries(accMap).map(([qId, data]) => {
+    const q = questions.find(qq => qq.id === parseInt(qId));
+    return {
+      qId: parseInt(qId),
+      direct: q ? q.direct : '題目 #' + qId,
+      correctCount: data.correct,
+      totalCount: data.total,
+      pct: data.total > 0 ? data.correct / data.total * 100 : 0
+    };
+  }).sort((a,b) => a.pct - b.pct);
+}
+
+function getErrorCategories() {
+  let person = 0, tense = 0, adverb = 0, other = 0;
+  studentsData.forEach(s => {
+    (s.records || []).forEach(r => {
+      if (!r.correct && r.errorCategory) {
+        if (r.errorCategory === 'person') person++;
+        else if (r.errorCategory === 'tense') tense++;
+        else if (r.errorCategory === 'adverb') adverb++;
+        else other++;
+      }
+    });
+  });
+  // If no categorized data, estimate from questions
+  if (person+tense+adverb+other === 0) {
+    studentsData.forEach(s => {
+      (s.wrongIds || []).forEach(wid => {
+        const q = questions.find(qq => qq.id === wid);
+        if (q) {
+          const err = (q.errorAnalysis || '').toLowerCase();
+          if (err.includes('人稱')) person++;
+          else if (err.includes('時態') || err.includes('tense')) tense++;
+          else if (err.includes('時間') || err.includes('副詞') || err.includes('yesterday') || err.includes('today')) adverb++;
+          else other++;
+        }
+      });
+    });
+  }
+  return [
+    { label: '人稱錯誤', value: person || 1 },
+    { label: '時態錯誤', value: tense || 1 },
+    { label: '時間副詞錯誤', value: adverb || 1 },
+    { label: '其他', value: other || 1 }
+  ];
+}
+
+function getTopWrongQuestions() {
+  const wrongMap = {};
+  studentsData.forEach(s => {
+    (s.wrongIds || []).forEach(wid => {
+      if (!wrongMap[wid]) wrongMap[wid] = 0;
+      wrongMap[wid]++;
+    });
+  });
+  return Object.entries(wrongMap)
+    .map(([qId, count]) => {
+      const q = questions.find(qq => qq.id === parseInt(qId));
+      return { qId: parseInt(qId), direct: q ? q.direct : '題目 #'+qId, count };
+    })
+    .sort((a,b) => b.count - a.count)
+    .slice(0, 10);
+}
+
+function getStudentTrend() {
+  // Return trend data for all students combined
+  const allRecords = [];
+  studentsData.forEach(s => {
+    (s.history || []).forEach(h => {
+      allRecords.push({ ...h, name: s.studentName });
+    });
+  });
+  allRecords.sort((a,b) => new Date(a.date) - new Date(b.date));
+  return allRecords;
+}
+
+let chartInstances = {};
+
+function createChart(id, config) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); }
+  chartInstances[id] = new Chart(document.getElementById(id), config);
+}
+
+function renderAccuracyChart() {
+  const data = getQuestionAccuracy();
+  const labels = data.map(d => d.direct.length > 20 ? d.direct.substring(0,20)+'...' : d.direct);
+  const values = data.map(d => Math.round(d.pct));
+  createChart('chart-accuracy', {
+    type: 'bar',
+    data: { labels, datasets: [{ label: '答對率 (%)', data: values, backgroundColor: values.map(v => v >= 70 ? '#48bb78' : v >= 40 ? '#ed8936' : '#fc8181'), borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: 100 } },
+      indexAxis: 'y' }
+  });
+}
+
+function renderErrorPieChart() {
+  const data = getErrorCategories();
+  createChart('chart-errors', {
+    type: 'pie',
+    data: { labels: data.map(d => d.label), datasets: [{ data: data.map(d => d.value), backgroundColor: ['#fc8181','#f6ad55','#68d391','#a0aec0'] }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+}
+
+function renderTrendChart() {
+  const records = getStudentTrend();
+  if (records.length === 0) {
+    document.getElementById('chart-trend').parentElement.innerHTML = '<div class="chart-box" style="display:flex;align-items:center;justify-content:center;color:#a0aec0">尚無數據</div>';
+    return;
+  }
+  const labels = records.map(r => r.date.substring(5,16));
+  const scores = records.map(r => r.total > 0 ? Math.round(r.correct/r.total*100) : 0);
+  createChart('chart-trend', {
+    type: 'line',
+    data: { labels, datasets: [{ label: '正確率 (%)', data: scores, borderColor: '#4299e1', backgroundColor: 'rgba(66,153,225,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+  });
+}
+
+function renderTopWrongChart() {
+  const data = getTopWrongQuestions();
+  const labels = data.map(d => d.direct.length > 25 ? d.direct.substring(0,25)+'...' : d.direct);
+  const values = data.map(d => d.count);
+  createChart('chart-top-wrong', {
+    type: 'bar',
+    data: { labels, datasets: [{ label: '答錯次數', data: values, backgroundColor: '#fc8181', borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, indexAxis: 'y',
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+}
+
+// ====== STUDENT DATA IMPORT ======
+function importStudentData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      // Expect { studentName, history, wrongIds, records, ... }
+      if (!data.studentName) {
+        document.getElementById('import-status').textContent = '⚠️ 格式錯誤：缺少 studentName';
+        return;
+      }
+      // Check if student already exists
+      const existing = studentsData.findIndex(s => s.studentName === data.studentName);
+      if (existing >= 0) {
+        studentsData[existing] = data;
+      } else {
+        studentsData.push(data);
+      }
+      saveState();
+      document.getElementById('import-status').textContent = `✅ 成功匯入「${data.studentName}」的作答記錄`;
+      if (document.getElementById('tab-dashboard').classList.contains('active')) renderDashboard();
+      if (document.getElementById('tab-students').classList.contains('active')) renderStudents();
+    } catch(err) {
+      document.getElementById('import-status').textContent = '❌ 解析失敗：' + err.message;
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ====== STUDENT MANAGEMENT ======
+function renderStudents() {
+  const container = document.getElementById('student-list-container');
+  if (studentsData.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>尚無學生數據，請從學生端匯入作答 JSON。</p></div>';
+    return;
+  }
+  let html = `<table><thead><tr><th>姓名</th><th>Level 1</th><th>Level 2</th><th>Level 3</th><th>答題總數</th><th>正確率</th></tr></thead><tbody>`;
+  studentsData.forEach(s => {
+    const l1 = s.history ? s.history.filter(h => h.level === 1) : [];
+    const l2 = s.history ? s.history.filter(h => h.level === 2) : [];
+    const l3 = s.history ? s.history.filter(h => h.level === 3) : [];
+    const l1c = l1.reduce((sum, h) => sum + (h.correct||0), 0);
+    const l1t = l1.reduce((sum, h) => sum + (h.total||0), 0);
+    const l2c = l2.reduce((sum, h) => sum + (h.correct||0), 0);
+    const l2t = l2.reduce((sum, h) => sum + (h.total||0), 0);
+    const l3c = l3.reduce((sum, h) => sum + (h.correct||0), 0);
+    const l3t = l3.reduce((sum, h) => sum + (h.total||0), 0);
+    const totC = l1c+l2c+l3c;
+    const totT = l1t+l2t+l3t;
+    html += `<tr>
+      <td><strong>${s.studentName}</strong></td>
+      <td>${l1t>0 ? l1c+'/'+l1t : '-'}</td>
+      <td>${l2t>0 ? l2c+'/'+l2t : '-'}</td>
+      <td>${l3t>0 ? l3c+'/'+l3t : '-'}</td>
+      <td>${totT}</td>
+      <td>${totT>0 ? Math.round(totC/totT*100)+'%' : '-'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ====== CSV EXPORT ======
+function exportCSV() {
+  if (studentsData.length === 0) { alert('尚無學生數據可匯出'); return; }
+  let csv = '姓名,Level,答對數,答題數,正確率,日期\n';
+  studentsData.forEach(s => {
+    (s.history || []).forEach(h => {
+      csv += `${s.studentName},Level ${h.level},${h.correct||0},${h.total||0},${h.total>0 ? Math.round(h.correct/h.total*100)+'%' : '0%'},${h.date}\n`;
+    });
+  });
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '學生數據報表.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ====== KEYBOARD SUPPORT ======
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeQuestionModal();
+});
+</script>
+</body>
+</html>
