@@ -1,17 +1,134 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenCode GitHub Pages 示範</title>
+  <title>Indirect Speech Exercise</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 80px auto; padding: 0 24px; line-height: 1.6; }
-    h1 { color: #2ea44f; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; padding: 24px; }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; color: #1a202c; margin-bottom: 4px; }
+    .subtitle { color: #4a5568; font-size: 0.95rem; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 1.1rem; color: #2d3748; margin-bottom: 8px; }
+    .card p { color: #4a5568; margin-bottom: 12px; line-height: 1.6; }
+    .question { border-bottom: 1px solid #e2e8f0; padding: 16px 0; }
+    .question:last-child { border-bottom: none; }
+    .question p { font-weight: 500; margin-bottom: 8px; }
+    .direct { background: #ebf8ff; padding: 8px 12px; border-radius: 6px; font-style: italic; margin-bottom: 8px; color: #2b6cb0; font-size: 0.95rem; }
+    input[type="text"] { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem; transition: border-color 0.2s; }
+    input[type="text"]:focus { outline: none; border-color: #4299e1; }
+    .correct { border-color: #48bb78 !important; background: #f0fff4; }
+    .wrong { border-color: #fc8181 !important; background: #fff5f5; }
+    .feedback { font-size: 0.85rem; margin-top: 4px; min-height: 1.3em; }
+    .feedback.correct { color: #276749; }
+    .feedback.wrong { color: #c53030; }
+    .btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-primary { background: #4299e1; color: #fff; }
+    .btn-primary:hover { background: #3182ce; }
+    .btn-secondary { background: #e2e8f0; color: #4a5568; }
+    .btn-secondary:hover { background: #cbd5e0; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .score { font-size: 1.1rem; font-weight: 700; color: #2d3748; }
+    .hint { font-size: 0.85rem; color: #718096; margin-top: 4px; }
+    table.rule { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    table.rule th, table.rule td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
+    table.rule th { background: #edf2f7; color: #2d3748; }
   </style>
 </head>
 <body>
-  <h1>☕ OpenCode GitHub Pages 示範</h1>
-  <p>這是由 OpenCode 懶人包自動部署的頁面。</p>
-  <p>部署時間：2026-06-18 20:15</p>
+<div class="container">
+  <h1>🔄 Indirect Speech Exercise</h1>
+  <p class="subtitle">Change the direct speech into indirect (reported) speech. Suitable for S2 / Grade 8.</p>
+
+  <div class="card">
+    <h2>📖 Quick Review</h2>
+    <p>When changing <strong>direct speech</strong> to <strong>indirect speech</strong>, remember:</p>
+    <table class="rule">
+      <tr><th>Tense</th><th>Direct → Indirect</th></tr>
+      <tr><td>Present Simple</td><td>"I <u>like</u> it." → He said he <u>liked</u> it.</td></tr>
+      <tr><td>Present Continuous</td><td>"I <u>am doing</u>" → He said he <u>was doing</u></td></tr>
+      <tr><td>Past Simple</td><td>"I <u>saw</u> it." → He said he <u>had seen</u> it.</td></tr>
+      <tr><td>Will</td><td>"I <u>will</u> go." → He said he <u>would</u> go.</td></tr>
+      <tr><td>Can</td><td>"I <u>can</u> swim." → He said he <u>could</u> swim.</td></tr>
+      <tr><td>Must</td><td>"You <u>must</u> try." → He said I <u>had to</u> try.</td></tr>
+      <tr><td>Now → Then</td><td>"I am busy <u>now</u>." → He said he was busy <u>then</u>.</td></tr>
+      <tr><td>Today → That day</td><td>"I called <u>today</u>." → He said he had called <u>that day</u>.</td></tr>
+    </table>
+  </div>
+
+  <div class="card" id="exercise">
+    <h2>✍️ Practice Questions</h2>
+    <p>Type the indirect speech for each sentence.</p>
+    <div id="questions"></div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="checkAnswers()">Check Answers</button>
+      <button class="btn btn-secondary" onclick="resetExercise()">Reset</button>
+    </div>
+    <div style="margin-top:12px"><span class="score" id="score">0 / 0</span></div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { direct: 'Tom said, "I am hungry."', answer: 'tom said he was hungry' },
+  { direct: 'Anna said, "I like reading books."', answer: 'anna said she liked reading books' },
+  { direct: 'He said, "I can speak three languages."', answer: 'he said he could speak three languages' },
+  { direct: 'She said, "I will help you tomorrow."', answer: 'she said she would help me the next day' },
+  { direct: 'They said, "We are playing football now."', answer: 'they said they were playing football then' },
+  { direct: 'Mom said, "You must finish your homework."', answer: 'mom said i had to finish my homework' },
+  { direct: 'John said, "I have visited Japan twice."', answer: 'john said he had visited japan twice' },
+  { direct: 'Peter said, "I bought a new computer yesterday."', answer: 'peter said he had bought a new computer the day before' },
+  { direct: 'The teacher said, "The earth goes around the sun."', answer: 'the teacher said the earth goes around the sun' },
+  { direct: 'Mike said, "I don\'t like spicy food."', answer: 'mike said he didnt like spicy food' }
+];
+
+const container = document.getElementById('questions');
+questions.forEach((q, i) => {
+  const div = document.createElement('div');
+  div.className = 'question';
+  div.id = 'q-' + i;
+  div.innerHTML = `
+    <p>Q${i+1}.</p>
+    <div class="direct">💬 "${q.direct.match(/"(.+)"/)[1]}"</div>
+    <input type="text" id="input-${i}" placeholder="He/She said that..." onkeydown="if(event.key==='Enter')checkAnswers()">
+    <div class="feedback" id="fb-${i}"></div>
+  `;
+  container.appendChild(div);
+});
+
+function normalize(s) {
+  return s.toLowerCase().replace(/['".,!?]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function checkAnswers() {
+  let correct = 0;
+  questions.forEach((q, i) => {
+    const input = document.getElementById('input-' + i);
+    const fb = document.getElementById('fb-' + i);
+    const ans = normalize(input.value);
+    const exp = normalize(q.answer);
+    const isCorrect = ans === exp;
+    if (isCorrect) correct++;
+    input.className = isCorrect ? 'correct' : 'wrong';
+    fb.textContent = isCorrect ? '✓ Correct!' : '✗ Hint: ' + q.answer;
+    fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+  });
+  document.getElementById('score').textContent = correct + ' / ' + questions.length;
+}
+
+function resetExercise() {
+  questions.forEach((q, i) => {
+    const input = document.getElementById('input-' + i);
+    const fb = document.getElementById('fb-' + i);
+    input.value = '';
+    input.className = '';
+    fb.textContent = '';
+    fb.className = 'feedback';
+  });
+  document.getElementById('score').textContent = '0 / ' + questions.length;
+}
+</script>
 </body>
 </html>
